@@ -26,6 +26,7 @@ color_map = color_inactive
 active_coord = False
 active_map = False
 crashed = False
+image = False
 
 while not crashed:
     for event in pygame.event.get():
@@ -61,16 +62,7 @@ while not crashed:
 
                 # Запишем полученное изображение в файл.
                 map_file = "map.png"
-                with open(map_file, "wb") as file:
-                    file.write(response.content)
-
-                screen.blit(pygame.image.load(map_file), (10, 30))
-                pygame.display.flip()
-                while pygame.event.wait().type != pygame.QUIT:
-                    pass
-                pygame.quit()
-
-                os.remove(map_file)
+                image = True
 
         if event.type == pygame.KEYDOWN:
             if active_coord:
@@ -103,5 +95,12 @@ while not crashed:
 
     pygame.draw.rect(screen, (255, 255, 255), sign_in_button)  # кнопка "найти"
     screen.blit(sign_in_label, (660, 10))
+
+    if image:
+        with open(map_file, "wb") as file:
+            file.write(response.content)
+
+        screen.blit(pygame.image.load(map_file), (20, 30))
+        pygame.display.flip()
 
     pygame.display.update()
