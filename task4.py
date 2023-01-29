@@ -41,6 +41,8 @@ class Maps_api:
         self.active_map = False
         self.image = False
 
+        self.format_image = 'map'
+
     def mouse_btn(self, event):
         if self.input_coord.collidepoint(event.pos):
             self.active_coord = not self.active_coord
@@ -56,19 +58,23 @@ class Maps_api:
         if self.sign_in_button.collidepoint(event.pos):
             self.poisk()
         elif self.map_button.collidepoint(event.pos):
+            self.format_image = 'map'
             self.poisk()
         elif self.sput_button.collidepoint(event.pos):
-            self.poisk(f='sat')
+            self.format_image = 'sat'
+            self.poisk()
         elif self.gibrid_button.collidepoint(event.pos):
-            self.poisk(f='sat,skl')
+            self.format_image = 'sat,skl'
+            self.poisk()
 
-    def poisk(self, f='map'):
+    def poisk(self):
         coord = self.text_coord
         map = self.text_map
 
         map_request = "http://static-maps.yandex.ru/1.x/?ll="
         map_request += coord + '&spn='
-        map_request += format(int(map) / 1000, '.3f') + ',' + format(int(map) / 1000, '.3f') + f'&l={f}'
+        map_request += format(int(map) / 1000, '.3f') + ',' + format(int(map) / 1000, '.3f')
+        map_request += f'&l={self.format_image}'
         self.response = requests.get(map_request)
 
         if not self.response:
