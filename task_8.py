@@ -4,7 +4,7 @@ import requests
 pygame.init()
 clock = pygame.time.Clock()
 pygame.display.set_caption('Maps API task #6')
-size = window_width, window_height = 845, 510
+size = window_width, window_height = 845, 570
 screen = pygame.display.set_mode(size)
 all_sprites = pygame.sprite.Group()
 gameDisplay = pygame.display.set_mode((window_width, window_height))
@@ -18,13 +18,17 @@ class Maps_api:
         self.text_coord = '0,0'
         self.text_map = '0'
         self.text_request = ''
+        self.text_adres = ''
         self.map_file = "map.png"
+        self.first_response = ''
         self.marks = []
 
+        self.print_adres = pygame.Rect(30, 530, 570, 20)
         self.input_coord = pygame.Rect(30, 10, 190, 20)
         self.input_map = pygame.Rect(225, 10, 190, 20)
         self.input_request = pygame.Rect(420, 10, 190, 20)
         self.sign_in_button = pygame.Rect(630, 10, 190, 20)
+        self.background_address = pygame.Rect(30, 530, 570, 20)
         self.sign_in_label = self.font2.render("Найти", True, "black")
 
         self.map_button = pygame.Rect(630, 50, 190, 20)
@@ -35,6 +39,9 @@ class Maps_api:
 
         self.gibrid_button = pygame.Rect(630, 110, 190, 20)
         self.gibrid_label = self.font2.render("Гибрид", True, "black")
+
+        self.delet_button = pygame.Rect(630, 140, 190, 20)
+        self.delet_label = self.font2.render("Сброс", True, "black")
 
         self.color_inactive = pygame.Color("gray")
         self.color_active = pygame.Color('black')
@@ -77,6 +84,11 @@ class Maps_api:
         elif self.gibrid_button.collidepoint(event.pos):
             self.format_image = 'sat,skl'
             self.poisk()
+        elif self.delet_button.collidepoint(event.pos):
+            self.marks = []
+            self.text_adres = ''
+            self.text_request = ''
+            self.poisk()
 
     def poisk(self):
         if not self.text_request:
@@ -102,6 +114,10 @@ class Maps_api:
 
             self.first_response = requests.get(map_request).json()['response']['GeoObjectCollection']['featureMember']
 
+            self.marks.append(','.join(self.first_response[0]['GeoObject']["Point"]["pos"].split(' ')))
+
+            self.text_adres = self.first_response[0]['GeoObject']['metaDataProperty']['GeocoderMetaData']['text']
+
             if not self.first_response:
                 print("Ошибка выполнения запроса:")
                 print(map_request)
@@ -112,9 +128,10 @@ class Maps_api:
                 map_request += cord + '&spn='
                 map_request += format(int(self.text_map) / 1000, '.3f') + ',' + format(int(self.text_map) / 1000, '.3f')
                 map_request += f'&l={self.format_image}'
-                map_request += '&pt={}'.format(cord + ',vkbkm')
+                map_request += "&pt={}".format('~'.join([cord + ',pm2rdm' for cord in self.marks])) \
+                               * int(bool(self.marks))
 
-                self.marks.append(cord)
+                self.marks.append(','.join(self.first_response[0]['GeoObject']["Point"]["pos"].split(' ')))
 
                 self.response = requests.get(map_request)
 
@@ -158,6 +175,11 @@ class Maps_api:
         screen.blit(self.txt_request, (self.input_request.x + 5, self.input_request.y - 1))
         pygame.draw.rect(screen, self.color_request, self.input_request, 2)
 
+        pygame.draw.rect(screen, pygame.Color('white'), self.background_address)
+        self.txt_adress = self.font1.render(self.text_adres, True, self.color_active)
+        screen.blit(self.txt_adress, (self.print_adres.x + 5, self.print_adres.y - 1))
+        pygame.draw.rect(screen, self.color_inactive, self.print_adres, 2)
+
         pygame.draw.rect(screen, pygame.Color('gray'), self.sign_in_button)
         screen.blit(self.sign_in_label, (705, 10))
         pygame.draw.rect(screen, pygame.Color('gray'), self.map_button)
@@ -166,6 +188,8 @@ class Maps_api:
         screen.blit(self.sput_label, (700, 80))
         pygame.draw.rect(screen, pygame.Color('gray'), self.gibrid_button)
         screen.blit(self.gibrid_label, (705, 110))
+        pygame.draw.rect(screen, pygame.Color('gray'), self.delet_button)
+        screen.blit(self.delet_label, (705, 140))
 
     def load_image(self):
         with open(self.map_file, "wb") as file:
