@@ -4,7 +4,7 @@ import requests
 pygame.init()
 clock = pygame.time.Clock()
 pygame.display.set_caption('Maps API task #3')
-size = window_width, window_height = 845, 510
+size = window_width, window_height = 845, 560
 screen = pygame.display.set_mode(size)
 all_sprites = pygame.sprite.Group()
 gameDisplay = pygame.display.set_mode((window_width, window_height))
@@ -15,14 +15,19 @@ class Maps_api:
     def __init__(self):
         self.font1 = pygame.font.SysFont("arialblack", 13)
         self.font2 = pygame.font.SysFont("arialblack", 13)
+        self.text_mesta = 'text'
         self.text_coord = '0,0'
         self.text_map = '0'
         self.map_file = "map.png"
 
+        self.input_mesta = pygame.Rect(30, 520, 510, 20)
         self.input_coord = pygame.Rect(30, 10, 190, 20)
         self.input_map = pygame.Rect(225, 10, 190, 20)
         self.sign_in_button = pygame.Rect(420, 10, 190, 20)
         self.sign_in_label = self.font2.render("Найти", True, "black")
+
+        self.poisk_button = pygame.Rect(630, 10, 190, 20)
+        self.poisk_label = self.font2.render("Найти", True, "black")
 
         self.map_button = pygame.Rect(630, 10, 190, 20)
         self.map_label = self.font2.render("Схема", True, "black")
@@ -35,8 +40,10 @@ class Maps_api:
 
         self.color_inactive = pygame.Color("gray")
         self.color_active = pygame.Color('black')
+        self.color_mesta = self.color_inactive
         self.color_coord = self.color_inactive
         self.color_map = self.color_inactive
+        self.active_mesta = False
         self.active_coord = False
         self.active_map = False
         self.image = False
@@ -44,6 +51,10 @@ class Maps_api:
         self.format_image = 'map'
 
     def mouse_btn(self, event):
+        if self.input_mesta.collidepoint(event.pos):
+            self.active_mesta = not self.active_mesta
+        else:
+            self.active_mesta = False
         if self.input_coord.collidepoint(event.pos):
             self.active_coord = not self.active_coord
         else:
@@ -52,11 +63,14 @@ class Maps_api:
             self.active_map = not self.active_map
         else:
             self.active_map = False
+        self.color_mesta = self.color_active if self.active_mesta else self.color_inactive
         self.color_coord = self.color_active if self.active_coord else self.color_inactive
         self.color_map = self.color_active if self.active_map else self.color_inactive
 
         if self.sign_in_button.collidepoint(event.pos):
             self.poisk()
+        elif self.poisk_button.collidepoint(event.pos):
+            self.poisk(mesta=True)
         elif self.map_button.collidepoint(event.pos):
             self.format_image = 'map'
             self.poisk()
@@ -67,7 +81,7 @@ class Maps_api:
             self.format_image = 'sat,skl'
             self.poisk()
 
-    def poisk(self):
+    def poisk(self, mesta=False):
         coord = self.text_coord
         map = self.text_map
 
@@ -121,6 +135,13 @@ class Maps_api:
                 map_api.poisk()
             except Exception:
                 return
+        elif self.active_mesta:
+            if event.key == pygame.K_RETURN:
+                self.text_mesta = ''
+            elif event.key == pygame.K_BACKSPACE:
+                self.text_mesta = self.text_mesta[:-1]
+            else:
+                self.text_mesta += event.unicode
         elif self.active_coord:
             if event.key == pygame.K_RETURN:
                 self.text_coord = ''
@@ -137,6 +158,11 @@ class Maps_api:
                 self.text_map += event.unicode
 
     def draw(self, screen):
+        self.txt_mesta = self.font1.render(self.text_mesta, True, self.color_mesta)
+
+        screen.blit(self.txt_mesta, (self.input_mesta.x + 5, self.input_mesta.y - 1))
+        pygame.draw.rect(screen, self.color_mesta, self.input_mesta, 2)
+
         self.txt_coord = self.font1.render(self.text_coord, True, self.color_coord)
 
         screen.blit(self.txt_coord, (self.input_coord.x + 5, self.input_coord.y - 1))
